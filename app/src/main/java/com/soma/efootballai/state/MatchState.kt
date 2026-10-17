@@ -1,9 +1,6 @@
 package com.soma.efootballai.state
 
-import android.os.Handler
-import android.os.Looper
-import java.util.concurrent.CopyOnWriteArraySet
-
+/** In-process state shared by the capture service and the main screen. */
 object MatchState {
     data class Snapshot(
         val status: String = "Ready",
@@ -12,25 +9,20 @@ object MatchState {
         val rawText: String? = null
     )
 
-    private val listeners = CopyOnWriteArraySet<(Snapshot) -> Unit>()
-    private val mainHandler = Handler(Looper.getMainLooper())
+    private val listeners = mutableSetOf<(Snapshot) -> Unit>()
     @Volatile private var current = Snapshot()
 
-    fun snapshot(): Snapshot = current
-
-    fun addListener(listener: (Snapshot) -> Unit) {
+    @Synchronized fun addListener(listener: (Snapshot) -> Unit) {
         listeners.add(listener)
-        mainHandler.post { listener(current) }
+        listener(current)
     }
 
-    fun removeListener(listener: (Snapshot) -> Unit) {
+    @Synchronized fun removeListener(listener: (Snapshot) -> Unit) {
         listeners.remove(listener)
     }
 
-    fun update(snapshot: Snapshot) {
+    @Synchronized fun update(snapshot: Snapshot) {
         current = snapshot
-        mainHandler.post {
-            listeners.forEach { listener -> listener(snapshot) }
-        }
+        listeners.toList().forEach { it(snapshot) }
     }
 }
