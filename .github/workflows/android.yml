@@ -20,9 +20,9 @@ jobs:
         distribution: 'temurin'
 
     - name: Setup Android SDK
-      uses: android-actions/setup-android@v3
+      uses: android-actions/setup-android@v4
       with:
-        accept-android-sdk-licenses: true
+        packages: 'platform-tools'
 
     - name: Accept Android SDK licenses
       run: yes | sdkmanager --licenses
